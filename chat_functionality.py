@@ -1,26 +1,39 @@
 import openai
-from config import *
+from tokenizers import ByteLevelBPETokenizer
 
+tokenizer = ByteLevelBPETokenizer()
 
-# Change "model" to whatever your desired model is. Such as GPT-4 if available
-# Adjust temperature to either increase or decrease the randomness of ChatGPT's responses. 0.0-2.0
-# Adjust max_tokens to increase or decrease the length of resposnes
+def tokenize(text):
+    tokens = tokenizer.encode(text).tokens
+    return tokens
+
+def truncate_conversation(conversation, max_tokens=4096):
+    conversation_text = ''.join([msg['content'] for msg in conversation])
+    conversation_tokens = tokenize(conversation_text)
+    if len(conversation_tokens) > max_tokens:
+        conversation_tokens = conversation_tokens[-max_tokens:]
+    truncated_conversation = ''.join(conversation_tokens)
+    return truncated_conversation
+
 def ChatGPT_conversation(conversation):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=conversation, max_tokens=200, temperature=1.0
+    conversation = truncate_conversation(conversation)
+    openai.api_key = "YOURAPIRKEYHERE"
+
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt="\n".join([msg["content"] for msg in conversation]),
+        max_tokens=150,
+        n=1,
+        stop=None,
+        temperature=0.8,
     )
-    conversation.append(
-        {
-            "role": response.choices[0].message.role,
-            "content": response.choices[0].message.content,
-        }
-    )
-    return conversation
+
+    assistant_message = response.choices[0].text.strip()
+    return assistant_message.strip()
 
 
-def completed_assistant(
-    prompt, conversation=[{"role": "system", "content": "You are a helpful assistant"}]
-):
-    conversation.append({"role": "user", "content": prompt})
-    conversation = ChatGPT_conversation(conversation)
-    return conversation[-1]["content"]
+def completed_assistant(user_message, conversation):
+    conversation.append({"role": "user", "content": user_message})
+    assistant_message = ChatGPT_conversation(conversation)
+    conversation.append({"role": "assistant", "content": assistant_message})
+    return assistant_message

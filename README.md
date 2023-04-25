@@ -63,4 +63,3 @@ This project is licensed under the GNU v.3 General Public License - see the LICE
 ## Acknowledgments
 - Shoutout to [niftycode](https://github.com/niftycode) - Author of imessage-reader
 - [OpenAI](https://www.openai.com/)
-- Shoutout to [PurpleBooth](https://github.com/PurpleBooth) - for putting this README template together
